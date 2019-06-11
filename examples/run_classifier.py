@@ -112,7 +112,7 @@ class ArgProcessor(DataProcessor):
     def get_dev_examples(self, data_dir):
         """See base class."""
         return self._create_examples(
-            self._read_tsv(os.path.join(data_dir, "dev.csv")),
+            self._read_csv(os.path.join(data_dir, "dev.csv")),
             "dev")
 
     def get_labels(self):
