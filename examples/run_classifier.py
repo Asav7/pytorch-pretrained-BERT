@@ -102,6 +102,46 @@ class DataProcessor(object):
             return lines
 
 
+class ArgProcessor(DataProcessor):
+
+    def get_train_examples(self, data_dir):
+        """See base class."""
+        return self._create_examples(
+            self._read_csv(os.path.join(data_dir, "train.csv")), "train")
+
+    def get_dev_examples(self, data_dir):
+        """See base class."""
+        return self._create_examples(
+            self._read_tsv(os.path.join(data_dir, "dev.csv")),
+            "dev")
+
+    def get_labels(self):
+        """See base class."""
+        return ["a", "s", "n"]
+
+    def _create_examples(self, lines, set_type):
+        """Creates examples for the training and dev sets."""
+        examples = []
+        for (i, line) in enumerate(lines):
+            guid = "%s-%s" % (set_type, line[0])
+            text_a = line[3]
+            text_b = line[4]
+            label = line[-1]
+            examples.append(
+                InputExample(guid=guid, text_a=text_a, text_b=text_b, label=label))
+        return examples
+
+    @classmethod
+    def _read_csv(cls, input_file, encoding='latin1'):
+        """Reads a semicolon separated value file."""
+        with open(input_file, "r", encoding=encoding) as f:
+            reader = csv.reader(f, delimiter=";")
+            lines = []
+            for line in reader:
+                lines.append(line)
+            return lines
+
+
 class MrpcProcessor(DataProcessor):
     """Processor for the MRPC data set (GLUE version)."""
 
@@ -547,6 +587,8 @@ def compute_metrics(task_name, preds, labels):
         return pearson_and_spearman(preds, labels)
     elif task_name == "qqp":
         return acc_and_f1(preds, labels)
+    elif task_name == "args":
+        return {"acc": simple_accuracy(preds, labels)}
     elif task_name == "mnli":
         return {"acc": simple_accuracy(preds, labels)}
     elif task_name == "mnli-mm":
@@ -663,6 +705,7 @@ def main():
     processors = {
         "cola": ColaProcessor,
         "mnli": MnliProcessor,
+        "args": ArgProcessor,
         "mnli-mm": MnliMismatchedProcessor,
         "mrpc": MrpcProcessor,
         "sst-2": Sst2Processor,
@@ -676,6 +719,7 @@ def main():
     output_modes = {
         "cola": "classification",
         "mnli": "classification",
+        "args": "classification",
         "mrpc": "classification",
         "sst-2": "classification",
         "sts-b": "regression",
